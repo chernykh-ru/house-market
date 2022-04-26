@@ -1,5 +1,11 @@
-import React, { ChangeEvent, FC, useState } from 'react'
+import React, { ChangeEvent, FC, FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  updateProfile,
+} from 'firebase/auth'
+import { app, db } from '../firebase.config'
 import { ReactComponent as ArrowRightIcon } from '../assets/svg/keyboardArrowRightIcon.svg'
 import visibilityIcon from '../assets/svg/visibilityIcon.svg'
 
@@ -26,12 +32,39 @@ const SignUp: FC = () => {
     }))
   }
 
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    try {
+      const auth = getAuth(app)
+
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      )
+      const user = userCredential.user
+
+      if (auth.currentUser) {
+        updateProfile(auth.currentUser, {
+          displayName: name,
+        })
+      }
+
+      navigate('/')
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log(error.message)
+      }
+    }
+  }
+
   return (
     <div className='pageContainer'>
       <header>
         <p className='pageHeader'>Welcome Back!</p>
       </header>
-      <form>
+      <form onSubmit={handleSubmit}>
         <input
           type='text'
           className='nameInput'
