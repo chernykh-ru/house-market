@@ -41,6 +41,15 @@ button {
   padding: 0 3rem;
   font-size: 1rem;
 }
+@media (min-width: 768px) {
+  .input,
+  .passwordInput,
+  .emailInput,
+  .nameInput,
+  .textarea {
+    padding: 0 4rem;
+  }
+}
 @media (min-width: 1100px) {
   .input,
   .passwordInput,
@@ -233,10 +242,10 @@ button {
 .signUpText {
   cursor: pointer;
 }
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .signInBar,
   .signUpBar {
-    justify-content: start;
+    justify-content: end;
   }
 }
 
@@ -256,7 +265,7 @@ button {
   background-color: #00cc66;
   border-radius: 50%;
 }
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .signInButton,
   .signUpButton {
     margin-left: 3rem;
