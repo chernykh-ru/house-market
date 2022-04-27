@@ -7,6 +7,7 @@ import {
 } from 'firebase/auth'
 import { setDoc, doc, serverTimestamp, FieldValue } from 'firebase/firestore'
 import { app, db } from '../firebase.config'
+import { toast } from 'react-toastify'
 import { ReactComponent as ArrowRightIcon } from '../assets/svg/keyboardArrowRightIcon.svg'
 import visibilityIcon from '../assets/svg/visibilityIcon.svg'
 
@@ -65,7 +66,7 @@ const SignUp: FC = () => {
       navigate('/')
     } catch (error) {
       if (error instanceof Error) {
-        console.log(error.message)
+        toast.error('Something went wrong with registration')
       }
     }
   }
