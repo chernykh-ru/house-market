@@ -1,7 +1,9 @@
-import React, { ChangeEvent, FC, useState } from 'react'
+import React, { ChangeEvent, FC, FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import { ReactComponent as ArrowRightIcon } from '../assets/svg/keyboardArrowRightIcon.svg'
 import visibilityIcon from '../assets/svg/visibilityIcon.svg'
+import { app } from '../firebase.config'
 
 interface ISignInFormData {
   email: string
@@ -24,12 +26,34 @@ const SignIn: FC = () => {
     }))
   }
 
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    try {
+      const auth = getAuth(app)
+
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      )
+
+      if (userCredential.user) {
+        navigate('/')
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log(error.message)
+      }
+    }
+  }
+
   return (
     <div className='pageContainer'>
       <header>
         <p className='pageHeader'>Welcome Back!</p>
       </header>
-      <form>
+      <form onSubmit={handleSubmit}>
         <input
           type='email'
           className='emailInput'

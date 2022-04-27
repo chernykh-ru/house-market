@@ -1,11 +1,24 @@
-import React, { FC } from 'react';
+import React, { FC, useState, useEffect } from 'react'
+import { getAuth, User } from 'firebase/auth'
+import { app } from '../firebase.config'
 
 const Profile: FC = () => {
-  return (
-    <div>
-      <h1>Profile</h1>
-    </div>
-  );
-};
+  const [user, setUser] = useState<User | null>(null)
 
-export default Profile;
+  useEffect(() => {
+    const auth = getAuth(app)
+    setUser(auth.currentUser)
+  }, [])
+
+  return user ? (
+    <div>
+      <h1>{user.displayName}</h1>
+    </div>
+  ) : (
+    <div>
+      <h1>Not Logged In</h1>
+    </div>
+  )
+}
+
+export default Profile
