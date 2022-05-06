@@ -5,7 +5,7 @@ export interface IListing {
     lat: number
     lng: number
   }
-  imageUrls: string[]
+  imgUrls: string[]
   regularPrice: number
   location: string
   timestamp: {

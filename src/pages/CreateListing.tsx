@@ -36,6 +36,30 @@ interface IFormData {
   userRef: string
 }
 
+interface IFormDataCopy {
+  type: 'rent' | 'sale'
+  bedrooms: number
+  location?: ''
+  regularPrice: number
+  parking: boolean
+  offer: boolean
+  bathrooms: number
+  name: string
+  discountedPrice?: number
+  furnished: boolean
+  geolocation: {
+    lat: number
+    lng: number
+  }
+  userRef: string
+  imgUrls: string[]
+  images?: FileList
+  address?: ''
+  timestamp: FieldValue
+  latitude?: number
+  longitude?: number
+}
+
 const CreateListing = () => {
   const [geolocationEnabled, setGeolocationEnabled] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
@@ -158,13 +182,13 @@ const CreateListing = () => {
             (snapshot) => {
               const progress =
                 (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-              console.log('Upload is ' + progress + '% done')
+              // console.log('Upload is ' + progress + '% done')
               switch (snapshot.state) {
                 case 'paused':
-                  console.log('Upload is paused')
+                  // console.log('Upload is paused')
                   break
                 case 'running':
-                  console.log('Upload is running')
+                  // console.log('Upload is running')
                   break
                 default:
                   break
@@ -192,7 +216,24 @@ const CreateListing = () => {
       return
     })
 
+    const formDataCopy: IFormDataCopy = {
+      ...formData,
+      imgUrls: imgUrls || [],
+      geolocation,
+      timestamp: serverTimestamp(),
+    }
+
+    formDataCopy.location = address
+    delete formDataCopy.images
+    delete formDataCopy.address
+    delete formDataCopy.latitude
+    delete formDataCopy.longitude
+    !formDataCopy.offer && delete formDataCopy.discountedPrice
+
+    const docRef = await addDoc(collection(db, 'listings'), formDataCopy)
     setLoading(false)
+    toast.success('Listing saved')
+    navigate(`/category/${formDataCopy.type}/${docRef.id}`)
   }
 
   const handleMutate = (
