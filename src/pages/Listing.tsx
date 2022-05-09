@@ -3,10 +3,17 @@ import { getAuth } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { YMaps, Map, Placemark } from 'react-yandex-maps'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { Navigation, Pagination, Scrollbar, Autoplay, A11y } from 'swiper'
 import { app, db } from '../firebase.config'
 import Spinner from '../components/Spinner'
 import shareIcon from '../assets/svg/shareIcon.svg'
 import { IListing } from '../types/types'
+// Import Swiper styles
+import 'swiper/css'
+import 'swiper/css/pagination'
+import 'swiper/css/navigation'
+import 'swiper/css/scrollbar'
 
 export interface MyParams {
   listingId: string
@@ -52,7 +59,42 @@ const Listing = () => {
 
   return (
     <main>
-      {/* SLIDER */}
+      <Swiper
+        slidesPerView={1}
+        loop={true}
+        navigation={true}
+        pagination={{
+          clickable: true,
+        }}
+        autoplay={{
+          delay: 5000,
+          disableOnInteraction: false,
+        }}
+        scrollbar={{
+          hide: true,
+        }}
+        a11y={{
+          prevSlideMessage: 'Previous slide',
+          nextSlideMessage: 'Next slide',
+        }}
+        modules={[Navigation, Pagination, Scrollbar, Autoplay, A11y]}
+      >
+        {listing.imgUrls.map((_, index) => (
+          <SwiperSlide key={index}>
+            <div
+              style={{
+                backgroundImage: `url(${listing.imgUrls[index]})`,
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                width: '100%',
+                height: '30vh',
+                backgroundSize: 'cover',
+              }}
+              className='swiperSlideDiv'
+            ></div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
 
       <div
         className='shareIconDiv'
