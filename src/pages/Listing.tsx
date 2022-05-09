@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { getAuth } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { YMaps, Map, Placemark } from 'react-yandex-maps'
 import { app, db } from '../firebase.config'
 import Spinner from '../components/Spinner'
 import shareIcon from '../assets/svg/shareIcon.svg'
@@ -85,7 +86,11 @@ const Listing = () => {
         </p>
         {listing.offer && (
           <p className='discountPrice'>
-            ${listing.regularPrice - listing.discountedPrice} discount
+            $
+            {(listing.regularPrice - listing.discountedPrice)
+              .toString()
+              .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}{' '}
+            discount
           </p>
         )}
 
@@ -106,7 +111,30 @@ const Listing = () => {
 
         <p className='listingLocationTitle'>Location</p>
 
-        {/* MAP */}
+        <div className='mapContainer'>
+          <YMaps>
+            <Map
+              state={{
+                center: [listing.geolocation.lat, listing.geolocation.lng],
+                zoom: 12,
+              }}
+              width={'100%'}
+              height={'100%'}
+            >
+              <Placemark
+                modules={['geoObject.addon.balloon']}
+                options={{
+                  preset: 'islands#darkGreenIcon',
+                  iconCaptionMaxWidth: '120',
+                }}
+                geometry={[listing.geolocation.lat, listing.geolocation.lng]}
+                properties={{
+                  balloonContent: `${listing.location}`,
+                }}
+              />
+            </Map>
+          </YMaps>
+        </div>
 
         {auth && auth.currentUser?.uid !== listing.userRef && (
           <Link

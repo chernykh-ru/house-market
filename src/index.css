@@ -558,14 +558,14 @@ button {
   font-size: 1.25rem;
 }
 
-.leafletContainer {
+.mapContainer {
   width: 100%;
-  height: 200px;
+  height: 300px;
   overflow-x: hidden;
   margin-bottom: 3rem;
 }
 @media (min-width: 1024px) {
-  .leafletContainer {
+  .mapContainer {
     height: 400px;
   }
 }
