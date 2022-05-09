@@ -9,7 +9,7 @@ import bathtubIcon from '../assets/svg/bathtubIcon.svg'
 interface IListingItemProps {
   listing: IListing
   id: string
-  onDelete?: (id: string, name: string) => void
+  onDelete?: (id: string) => void
   onEdit?: (id: string) => void
 }
 const ListingItem: FC<IListingItemProps> = ({
@@ -61,7 +61,7 @@ const ListingItem: FC<IListingItemProps> = ({
         <DeleteIcon
           className='removeIcon'
           fill='rgb(231, 76, 60)'
-          onClick={() => onDelete(id, name)}
+          onClick={() => onDelete(id)}
         />
       )}
 

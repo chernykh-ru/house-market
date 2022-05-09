@@ -1,12 +1,24 @@
-import React, { ChangeEvent, FC, useState } from 'react'
+import React, { ChangeEvent, FC, useState, useEffect } from 'react'
 import { getAuth, updateProfile } from 'firebase/auth'
 import { app } from '../firebase.config'
-import { updateDoc, doc } from 'firebase/firestore'
+import {
+  updateDoc,
+  doc,
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  deleteDoc,
+} from 'firebase/firestore'
 import { db } from '../firebase.config'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import arrowRight from '../assets/svg/keyboardArrowRightIcon.svg'
 import homeIcon from '../assets/svg/homeIcon.svg'
+import { IListings } from './Category'
+import { IListing } from '../types/types'
+import ListingItem from '../components/ListingItem'
 
 interface IProfileFormData {
   name: string
@@ -16,12 +28,42 @@ interface IProfileFormData {
 const Profile: FC = () => {
   const auth = getAuth(app)
   const [changeDetails, setChangeDetails] = useState<boolean>(false)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [listings, setListings] = useState<IListings[] | null>(null)
   const [formData, setFormData] = useState<IProfileFormData>({
     name: auth.currentUser?.displayName || '',
     email: auth.currentUser?.email || '',
   })
   const { name, email } = formData
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const fetchUserListings = async () => {
+      const listingsRef = collection(db, 'listings')
+
+      const q = query(
+        listingsRef,
+        where('userRef', '==', auth.currentUser?.uid),
+        orderBy('timestamp', 'desc')
+      )
+
+      const querySnap = await getDocs(q)
+
+      const listings: IListings[] = []
+
+      querySnap.forEach((doc) => {
+        return listings.push({
+          id: doc.id,
+          data: doc.data() as IListing,
+        })
+      })
+
+      setListings(listings)
+      setLoading(false)
+    }
+
+    fetchUserListings()
+  }, [auth.currentUser?.uid])
 
   const handleLogout = async () => {
     try {
@@ -68,6 +110,16 @@ const Profile: FC = () => {
     }))
   }
 
+  const handleDelete = async (listingId: string) => {
+    if (window.confirm('Are you sure you want to delete?')) {
+      await deleteDoc(doc(db, 'listings', listingId))
+      const updatedListings =
+        listings && listings.filter((listing) => listing.id !== listingId)
+      setListings(updatedListings)
+      toast.success('Successfully deleted listing')
+    }
+  }
+
   return (
     <div className='profile'>
       <header className='profileHeader'>
@@ -111,6 +163,22 @@ const Profile: FC = () => {
           <p>Sell or rent your home</p>
           <img src={arrowRight} alt='arrow right' />
         </Link>
+
+        {!loading && listings && listings.length > 0 && (
+          <>
+            <p className='listingText'>Your Listings</p>
+            <ul className='listingsList'>
+              {listings.map(({ id, data }) => (
+                <ListingItem
+                  key={id}
+                  listing={data}
+                  id={id}
+                  onDelete={() => handleDelete(id)}
+                />
+              ))}
+            </ul>
+          </>
+        )}
       </main>
     </div>
   )
