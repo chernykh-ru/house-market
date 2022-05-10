@@ -39,27 +39,34 @@ const Profile: FC = () => {
 
   useEffect(() => {
     const fetchUserListings = async () => {
-      const listingsRef = collection(db, 'listings')
+      try {
+        const listingsRef = collection(db, 'listings')
 
-      const q = query(
-        listingsRef,
-        where('userRef', '==', auth.currentUser?.uid),
-        orderBy('timestamp', 'desc')
-      )
+        const q = query(
+          listingsRef,
+          where('userRef', '==', auth.currentUser?.uid),
+          orderBy('timestamp', 'desc')
+        )
 
-      const querySnap = await getDocs(q)
+        const querySnap = await getDocs(q)
 
-      const listings: IListings[] = []
+        const listings: IListings[] = []
 
-      querySnap.forEach((doc) => {
-        return listings.push({
-          id: doc.id,
-          data: doc.data() as IListing,
+        querySnap.forEach((doc) => {
+          return listings.push({
+            id: doc.id,
+            data: doc.data() as IListing,
+          })
         })
-      })
 
-      setListings(listings)
-      setLoading(false)
+        setListings(listings)
+        setLoading(false)
+      } catch (error) {
+        if (error instanceof Error) {
+          setLoading(false)
+          toast.error('Could not get user listings')
+        }
+      }
     }
 
     fetchUserListings()

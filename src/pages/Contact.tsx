@@ -24,18 +24,23 @@ const Contact = () => {
 
   useEffect(() => {
     const getLandlord = async () => {
-      const docRef = doc(db, 'users', params.landlordId)
-      const docSnap = await getDoc(docRef)
+      try {
+        const docRef = doc(db, 'users', params.landlordId)
+        const docSnap = await getDoc(docRef)
 
-      if (docSnap.exists()) {
-        setLandlord(docSnap.data() as ILandlord)
-      } else {
-        toast.error('Could not get landlord data')
+        if (docSnap.exists()) {
+          setLandlord(docSnap.data() as ILandlord)
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          toast.error('Could not get landlord data')
+          setTimeout(() => navigate(-1), 4000)
+        }
       }
     }
 
     getLandlord()
-  }, [params.landlordId])
+  }, [params.landlordId, navigate])
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) =>
     setMessage(e.target.value)

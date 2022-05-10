@@ -54,6 +54,7 @@ const Offers = () => {
         setLoading(false)
       } catch (error) {
         if (error instanceof Error) {
+          setLoading(false)
           toast.error('Could not fetch listings')
         }
       }

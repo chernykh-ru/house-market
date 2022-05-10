@@ -62,14 +62,13 @@ const Category = () => {
         setLoading(false)
       } catch (error) {
         if (error instanceof Error) {
+          setLoading(false)
           toast.error('Could not fetch listings')
         }
       }
     }
     fetchListings()
   }, [params.categoryName])
-
-  
 
   return (
     <div className='category'>

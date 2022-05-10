@@ -21,21 +21,27 @@ const Slider = () => {
 
   useEffect(() => {
     const fetchListings = async () => {
-      const listingsRef = collection(db, 'listings')
-      const q = query(listingsRef, orderBy('timestamp', 'desc'), limit(5))
-      const querySnap = await getDocs(q)
+      try {
+        const listingsRef = collection(db, 'listings')
+        const q = query(listingsRef, orderBy('timestamp', 'desc'), limit(5))
+        const querySnap = await getDocs(q)
 
-      const listings: IListings[] = []
+        const listings: IListings[] = []
 
-      querySnap.forEach((doc) => {
-        return listings.push({
-          id: doc.id,
-          data: doc.data() as IListing,
+        querySnap.forEach((doc) => {
+          return listings.push({
+            id: doc.id,
+            data: doc.data() as IListing,
+          })
         })
-      })
 
-      setListings(listings)
-      setLoading(false)
+        setListings(listings)
+        setLoading(false)
+      } catch (error) {
+        if (error instanceof Error) {
+          setLoading(false)
+        }
+      }
     }
 
     fetchListings()
