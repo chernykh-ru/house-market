@@ -127,6 +127,9 @@ const Profile: FC = () => {
     }
   }
 
+  const handleEdit = (listingId: string) =>
+    navigate(`/edit-listing/${listingId}`)
+
   return (
     <div className='profile'>
       <header className='profileHeader'>
@@ -181,6 +184,7 @@ const Profile: FC = () => {
                   listing={data}
                   id={id}
                   onDelete={() => handleDelete(id)}
+                  onEdit={() => handleEdit(id)}
                 />
               ))}
             </ul>

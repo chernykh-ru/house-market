@@ -7,62 +7,29 @@ import {
   getDownloadURL,
 } from 'firebase/storage'
 import {
-  addDoc,
-  collection,
-  FieldValue,
+  doc,
+  updateDoc,
+  getDoc,
   serverTimestamp,
+  UpdateData,
 } from 'firebase/firestore'
 import { app, db } from '../firebase.config'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { v4 as uuidv4 } from 'uuid'
 import Spinner from '../components/Spinner'
+import { IFormData, IFormDataCopy } from './CreateListing'
+import { IListing } from '../types/types'
 
-export interface IFormData {
-  type: 'rent' | 'sale'
-  bedrooms: number
-  address: ''
-  images: FileList
-  regularPrice: number
-  parking: boolean
-  offer: boolean
-  bathrooms: number
-  name: string
-  discountedPrice: number
-  furnished: boolean
-  latitude: number
-  longitude: number
-  userRef: string
+export interface MyParams {
+  listingId: string
 }
 
-export interface IFormDataCopy {
-  type: 'rent' | 'sale'
-  bedrooms: number
-  location?: ''
-  regularPrice: number
-  parking: boolean
-  offer: boolean
-  bathrooms: number
-  name: string
-  discountedPrice?: number
-  furnished: boolean
-  geolocation: {
-    lat: number
-    lng: number
-  }
-  userRef: string
-  imgUrls: string[]
-  images?: FileList
-  address?: ''
-  timestamp: FieldValue
-  latitude?: number
-  longitude?: number
-}
-
-const CreateListing = () => {
+const EditListing = () => {
   // eslint-disable-next-line
   const [geolocationEnabled, setGeolocationEnabled] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
+  const [listing, setListing] = useState<IListing | null>(null)
   const [formData, setFormData] = useState<IFormData>({
     type: 'rent',
     name: '',
@@ -98,8 +65,46 @@ const CreateListing = () => {
 
   const auth = getAuth(app)
   const navigate = useNavigate()
+  const params = useParams<keyof MyParams>() as MyParams
   const isMounted = useRef(true)
 
+  // Redirect if listing is not user's
+  useEffect(() => {
+    if (listing && auth && listing.userRef !== auth.currentUser?.uid) {
+      toast.error('You can not edit that listing')
+      navigate('/')
+    }
+  })
+
+  // Fetch listing to edit
+  useEffect(() => {
+    setLoading(true)
+    const fetchListing = async () => {
+      try {
+        const docRef = doc(db, 'listings', params.listingId)
+        const docSnap = await getDoc(docRef)
+        if (docSnap.exists()) {
+          setListing(docSnap.data() as IListing)
+          setFormData({
+            ...docSnap.data(),
+            address: docSnap.data().location,
+            latitude: docSnap.data().geolocation.lat,
+            longitude: docSnap.data().geolocation.lng,
+          } as IFormData)
+          setLoading(false)
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          navigate('/')
+          toast.error('Listing does not exist')
+        }
+      }
+    }
+
+    fetchListing()
+  }, [params.listingId, navigate])
+
+  // Sets userRef to logged in user
   useEffect(() => {
     if (isMounted) {
       onAuthStateChanged(auth, (user) => {
@@ -140,7 +145,6 @@ const CreateListing = () => {
     }
     let location
 
-    // Not use, blocked by google in some locations
     if (geolocationEnabled) {
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=${process.env.REACT_APP_GEOCODE_API_KEY}`
@@ -232,7 +236,9 @@ const CreateListing = () => {
     delete formDataCopy.longitude
     !formDataCopy.offer && delete formDataCopy.discountedPrice
 
-    const docRef = await addDoc(collection(db, 'listings'), formDataCopy)
+    // Update listing
+    const docRef = doc(db, 'listings', params.listingId)
+    await updateDoc(docRef, formDataCopy as UpdateData<IFormDataCopy>)
     setLoading(false)
     toast.success('Listing saved')
     navigate(`/category/${formDataCopy.type}/${docRef.id}`)
@@ -292,7 +298,7 @@ const CreateListing = () => {
   return (
     <div className='profile'>
       <header>
-        <p className='pageHeader'>Create a Listing</p>
+        <p className='pageHeader'>Edit Listing</p>
       </header>
 
       <main>
@@ -340,8 +346,8 @@ const CreateListing = () => {
                 id='bedrooms'
                 value={bedrooms}
                 onChange={handleMutate}
-                min={1}
-                max={50}
+                min='1'
+                max='50'
                 required
               />
             </div>
@@ -478,8 +484,8 @@ const CreateListing = () => {
               id='regularPrice'
               value={regularPrice}
               onChange={handleMutate}
-              min={50}
-              max={900000000}
+              min='50'
+              max='900000000'
               required
             />
             {type === 'rent' && <p className='formPriceText'>$ / Month</p>}
@@ -494,8 +500,8 @@ const CreateListing = () => {
                 id='discountedPrice'
                 value={discountedPrice}
                 onChange={handleMutate}
-                min={50}
-                max={900000000}
+                min='50'
+                max='900000000'
                 required={offer}
               />
             </>
@@ -510,13 +516,13 @@ const CreateListing = () => {
             type='file'
             id='images'
             onChange={handleMutate}
-            max={6}
+            max='6'
             accept='.jpg,.png,.jpeg'
             multiple
             required
           />
           <button type='submit' className='primaryButton createListingButton'>
-            Create Listing
+            Edit Listing
           </button>
         </form>
       </main>
@@ -524,4 +530,4 @@ const CreateListing = () => {
   )
 }
 
-export default CreateListing
+export default EditListing
