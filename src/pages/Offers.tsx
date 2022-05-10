@@ -23,6 +23,8 @@ export interface IListings {
 const Offers = () => {
   const [listings, setListings] = useState<IListings[] | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
+  const [lastFetchedListing, setLastFetchedListing] =
+    useState<DocumentData | null>(null)
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -35,11 +37,14 @@ const Offers = () => {
           listingsRef,
           where('offer', '==', true),
           orderBy('timestamp', 'desc'),
-          limit(10)
+          limit(2)
         )
 
         // Execute query
         const querySnap = await getDocs(q)
+
+        const lastVisible = querySnap.docs[querySnap.docs.length - 1]
+        setLastFetchedListing(lastVisible)
 
         const listings: IListings[] = []
 
@@ -61,6 +66,54 @@ const Offers = () => {
     }
     fetchListings()
   }, [])
+
+  // Pagination / Load More
+  const handleFetchMoreListings = async () => {
+    try {
+      // Get reference
+      const listingsRef = collection(db, 'listings')
+
+      // Create a query
+      const q = query(
+        listingsRef,
+        where('offer', '==', true),
+        orderBy('timestamp', 'desc'),
+        startAfter(lastFetchedListing),
+        limit(1)
+      )
+
+      // Execute query
+      const querySnap = await getDocs(q)
+
+      const lastVisible = querySnap.docs[querySnap.docs.length - 1]
+      setLastFetchedListing(lastVisible)
+
+      const listings: IListings[] = []
+
+      querySnap.forEach((doc) => {
+        return listings.push({
+          id: doc.id,
+          data: doc.data() as IListing,
+        })
+      })
+
+      setListings((prevState) => {
+        if (prevState) {
+          return [...prevState, ...listings]
+        }
+        if (prevState === null) {
+          return [...listings]
+        }
+        return null
+      })
+      setLoading(false)
+    } catch (error) {
+      if (error instanceof Error) {
+        setLoading(false)
+        toast.error('Could not fetch listings')
+      }
+    }
+  }
 
   return (
     <div className='category'>
@@ -86,6 +139,12 @@ const Offers = () => {
 
           <br />
           <br />
+
+          {lastFetchedListing && (
+            <p className='loadMore' onClick={handleFetchMoreListings}>
+              Load More
+            </p>
+          )}
         </>
       ) : (
         <p>There are no current offers</p>
